@@ -21,6 +21,7 @@ class ShiftTask(Base):
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     closed_at: Mapped[datetime | None]
+    products: Mapped[list["Product"]] = relationship(back_populates="shift_task")
 
     __table_args__ = (UniqueConstraint("batch_number", "batch_date", name="batch_number_date_unique"),)
 
@@ -30,7 +31,7 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     is_aggregated: Mapped[bool] = mapped_column(default=False)
-    aggregated_at: Mapped[datetime]
+    aggregated_at: Mapped[datetime | None]
     batch_number: Mapped[int]
     batch_date: Mapped[date]
     shift_task: Mapped[ShiftTask] = relationship(back_populates="products")
