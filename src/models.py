@@ -29,7 +29,7 @@ class Product(Base):
 
     __tablename__ = "product"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     is_aggregated: Mapped[bool] = mapped_column(default=False)
     aggregated_at: Mapped[datetime | None]
     batch_number: Mapped[int]
