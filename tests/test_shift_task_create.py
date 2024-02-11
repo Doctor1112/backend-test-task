@@ -3,21 +3,8 @@ from httpx import AsyncClient
 import pytest
 from src.schemas import ShiftTaskCreate, BaseShiftTask
 from src.crud import Crud
+from tests.data import base_shift_task
 
-base_shift_task = {
-    "СтатусЗакрытия": "false",
-    "ПредставлениеЗаданияНаСмену": "Задание на смену 2345",
-    "Линия": "Т2",
-    "Смена": "1",
-    "Бригада": "Бригада №4",
-    "НомерПартии": 22222,
-    "ДатаПартии": "2024-01-30",
-    "Номенклатура": "Какая то номенклатура",
-    "КодЕКН": "456678",
-    "ИдентификаторРЦ": "A",
-    "ДатаВремяНачалаСмены": "2024-01-30T20:00:00+05:00",
-    "ДатаВремяОкончанияСмены": "2024-01-31T08:00:00+05:00",
-}
 
 
 @pytest.mark.parametrize(

@@ -12,8 +12,10 @@ from src.main import app
 from src.config import settings
 from src.crud import Crud
 from src.models import ShiftTask
+from src.schemas import ShiftTaskCreate, ShiftTaskOut
 import faker
 from datetime import datetime, date
+from tests.data import base_shift_task
 
 
 # DATABASE
@@ -99,4 +101,13 @@ async def product_factory(async_session: AsyncSession):
         return products
     
     return inner
+
+@pytest.fixture()
+async def shift_task(async_session: AsyncSession) -> ShiftTaskOut:
+    shift_task = ShiftTask(**ShiftTaskCreate.model_validate(base_shift_task).model_dump())
+    async_session.add(shift_task)
+    await async_session.commit()
+    return shift_task
+
+
 
