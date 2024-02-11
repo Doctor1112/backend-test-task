@@ -3,7 +3,7 @@ from src.db.init_db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.deps import get_crud
 from src.crud import Crud
-from src.schemas import ShiftTaskOut, ShiftTaskCreate
+from src.schemas import ShiftTaskOut, ShiftTaskCreate, ProductCreate
 app = FastAPI()
 
 
@@ -20,6 +20,11 @@ async def create_shift_tasks(shift_tasks: list[ShiftTaskCreate],
         unique_pairs.add(unique_pair)
         shift_tasks_dicts.append(shift_task.model_dump())
     await crud.create_shift_tasks(shift_tasks_dicts)
+
+@app.post("/products", status_code=status.HTTP_201_CREATED)
+async def create_products(products: list[ProductCreate],
+                          crud: Crud = Depends(get_crud)):
+    await crud.create_products(products)
 
 
 

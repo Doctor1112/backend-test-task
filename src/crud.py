@@ -1,11 +1,12 @@
 from typing import Sequence
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import ShiftTask, Product
 from sqlalchemy.orm import selectinload
-from datetime import datetime
+from datetime import date, datetime
 from sqlalchemy.dialects.sqlite import insert as sqlite_upsert
+from src.schemas import ProductCreate
 
 
 class Crud:
@@ -34,3 +35,28 @@ class Crud:
         query = select(ShiftTask)
         res = await self._db.execute(query)
         return res.scalars().all()
+    
+    async def get_product_by_id(self, id: str) -> Product | None:
+        return await self._db.get(Product, id)
+    
+    async def get_shift_task_by_batch_number_and_date(self, batch_number: int, batch_date: date) -> ShiftTask | None:
+        query = select(ShiftTask).where(
+            ShiftTask.batch_date == batch_date,
+            ShiftTask.batch_number == batch_number
+        )
+        res = await self._db.execute(query)
+        return res.scalar_one_or_none()
+    
+    async def create_products(self, products: list[ProductCreate]):
+        for product in products:
+            shift_task = await self.get_shift_task_by_batch_number_and_date(product.batch_number,
+                                                         product.batch_date)
+            product_exists = await self.get_product_by_id(product.id)
+            if shift_task is None or not product_exists is None:
+                continue
+            self._db.add(Product(**product.model_dump()))
+        await self._db.commit()
+
+    async def get_products_count(self) -> int | None:
+        query = await self._db.execute(func.count(Product.id))
+        return query.scalar()
