@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import BaseModel, Field, model_validator, validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, validator
 from src.models import Product
 
 alias_map = {
@@ -47,8 +47,9 @@ class ShiftTaskCreate(BaseShiftTask):
     
 class ShiftTaskOut(BaseShiftTask):
 
-    closed_at: datetime | None
-    products: list[str]
+    closed_at: datetime | None = None
+    id: int
+    products: list[str] = []
     
     @validator('products', pre=True)
     def convert_products(cls, value: list[Product]):
@@ -59,3 +60,7 @@ class ProductCreate(BaseModel):
     id: str = Field(validation_alias="УникальныйКодПродукта")
     batch_number: int = Field(validation_alias="НомерПартии")
     batch_date: date = Field(validation_alias="ДатаПартии")
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
