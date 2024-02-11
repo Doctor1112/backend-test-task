@@ -28,3 +28,13 @@ async def create_products(products: list[ProductCreate],
 
 
 
+@app.get("/shift_tasks/{id}", response_model=ShiftTaskOut)
+async def get_shift_task_with_products_ids(id: int, crud: Crud = Depends(get_crud)):
+    shift = await crud.get_shift_task_with_products(id)
+    if shift is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="shift task with this id does not exist"
+        )
+    return shift
+
