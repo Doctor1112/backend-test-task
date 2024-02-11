@@ -11,6 +11,9 @@ from src.db.init_db import Base, get_db
 from src.main import app
 from src.config import settings
 from src.crud import Crud
+from src.models import ShiftTask
+import faker
+from datetime import datetime, date
 
 
 # DATABASE
@@ -60,8 +63,40 @@ def event_loop(request):
 client = TestClient(app)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 async def ac() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(app=app, base_url=BASE_URL) as ac:
         yield ac
+
+@pytest.fixture()
+async def product_factory(async_session: AsyncSession):
+    fake = faker.Faker()
+    async def inner(n=1, with_task_creating=True) -> list[dict]:
+        products = []
+        for i in range(n):
+            product = {
+                    "УникальныйКодПродукта": fake.unique.text(),
+                    "НомерПартии": fake.unique.random_int(),
+                    "ДатаПартии": fake.unique.date(),
+                    }
+            if with_task_creating:
+                shift_task = ShiftTask(
+                            closing_status=False,
+                            task=fake.text(),
+                            work_center=fake.text(),
+                            shift=fake.text(),
+                            brigade=fake.text(),
+                            batch_number=product["НомерПартии"],
+                            batch_date=date.fromisoformat(product["ДатаПартии"]),
+                            nomenclature=fake.text(),
+                            ekn_code=fake.text(),
+                            work_center_id=fake.text(),
+                            start_time=datetime(2000, 2, 3),
+                            end_time=datetime(2001, 2, 3))
+                async_session.add(shift_task)
+            await async_session.commit()
+            products.append(product)
+        return products
+    
+    return inner
 
