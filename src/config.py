@@ -8,6 +8,11 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_USER: str
     DB_PORT: str
+    DB_TEST_HOST: str
+    DB_TEST_PASS: str
+    DB_TEST_NAME: str
+    DB_TEST_USER: str
+    DB_TEST_PORT: str
 
     model_config = SettingsConfigDict(env_file=".env")
     
