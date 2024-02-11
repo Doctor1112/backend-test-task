@@ -53,3 +53,9 @@ class ShiftTaskOut(BaseShiftTask):
     @validator('products', pre=True)
     def convert_products(cls, value: list[Product]):
         return [product.id for product in value]
+    
+class ProductCreate(BaseModel):
+
+    id: str = Field(validation_alias="УникальныйКодПродукта")
+    batch_number: int = Field(validation_alias="НомерПартии")
+    batch_date: date = Field(validation_alias="ДатаПартии")
