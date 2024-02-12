@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Response
 from httpx import AsyncClient
 import pytest
-from src.schemas import ProductCreate, ShiftTaskOut
+from src.schemas import ProductCreate, ShiftTaskOut, ShiftTaskOutWithProducts
 from src.crud import Crud
 from datetime import date
 from src.models import ShiftTask
@@ -12,7 +12,7 @@ async def test_get_shift_task(ac: AsyncClient,
     res = await ac.get(f"/shift_tasks/{shift_task.id}")
     body = res.json()
     assert res.status_code == 200
-    assert ShiftTaskOut(**body) == ShiftTaskOut(**shift_task.__dict__)
+    assert ShiftTaskOutWithProducts(**body) == ShiftTaskOutWithProducts(**shift_task.__dict__)
 
 async def test_get_shift_task_with_products(ac: AsyncClient,
                               shift_task: ShiftTask, crud: Crud):

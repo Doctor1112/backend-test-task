@@ -44,17 +44,43 @@ class ShiftTaskCreate(BaseShiftTask):
 
     class Config:
         alias_generator= lambda x: alias_map[x]
-    
-class ShiftTaskOut(BaseShiftTask):
 
+class ShiftTaskOut(BaseShiftTask):
     closed_at: datetime | None = None
     id: int
+    
+class ShiftTaskOutWithProducts(BaseShiftTask):
+
     products: list[str] = []
     
     @validator('products', pre=True)
     def convert_products(cls, value: list[Product]):
         return [product.id for product in value]
-    
+
+class ShiftTaskEdit(BaseModel):
+    closing_status: bool | None = None
+    task: str | None = None
+    work_center: str | None = None
+    shift: str | None = None
+    brigade: str | None = None
+    batch_number: int | None = None
+    batch_date: date | None = None
+    nomenclature: str | None = None
+    ekn_code: str | None = None
+    work_center_id: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+
+    @model_validator(mode='after')
+    def check_start_time_end_time(self) -> 'ShiftTaskEdit':
+        if self.start_time and self.end_time:
+            if self.start_time >= self.end_time:
+                raise ValueError('start time is later than end time')
+        return self
+
+    class Config:
+        from_attributes = True
+
 class ProductCreate(BaseModel):
 
     id: str = Field(validation_alias="УникальныйКодПродукта")
