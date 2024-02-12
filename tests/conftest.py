@@ -110,4 +110,28 @@ async def shift_task(async_session: AsyncSession) -> ShiftTaskOut:
     return shift_task
 
 
-
+@pytest.fixture()
+async def shift_task_factory(async_session: AsyncSession):
+    fake = faker.Faker()
+    async def inner(n=1) -> list[ShiftTask]:
+        shift_tasks = []
+        for i in range(n):
+            shift_task = ShiftTask(
+                        closing_status=False,
+                        task=fake.text(),
+                        work_center=fake.text(),
+                        shift=fake.text(),
+                        brigade=fake.text(),
+                        batch_number=fake.unique.random_int(),
+                        batch_date=date.fromisoformat(fake.unique.date()),
+                        nomenclature=fake.text(),
+                        ekn_code=fake.text(),
+                        work_center_id=fake.text(),
+                        start_time=datetime(2000, 2, 3),
+                        end_time=datetime(2001, 2, 3))
+            async_session.add(shift_task)
+            shift_tasks.append(shift_task)
+        await async_session.commit()
+        return shift_tasks
+    
+    return inner
