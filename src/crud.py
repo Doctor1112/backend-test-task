@@ -6,13 +6,23 @@ from src.models import ShiftTask, Product
 from sqlalchemy.orm import selectinload
 from datetime import date, datetime
 from sqlalchemy.dialects.sqlite import insert as sqlite_upsert
-from src.schemas import ProductCreate, ShiftTaskEdit
+from src.schemas import ProductCreate, ShiftTaskEdit, ShiftTaskFilter
 
 
 class Crud:
 
     def __init__(self, db: AsyncSession):
         self._db = db
+
+    async def get_shift_tasks(self, params: ShiftTaskFilter | None = None,
+                              offset: int = 0, limit: int | None = None) -> Sequence[ShiftTask]:
+        query = select(ShiftTask)
+        if params:
+            query = query.filter_by(**params.model_dump(exclude_none=True)).offset(offset)
+        if not limit is None:
+            query = query.limit(limit)
+        res = await self._db.execute(query)
+        return res.scalars().all()
 
     async def get_shift_task_with_products(self, shift_id: int) -> ShiftTask | None:
         query = select(ShiftTask).where(ShiftTask.id == shift_id).options(
@@ -58,12 +68,6 @@ class Crud:
 
     async def get_shift_task_by_id(self, id: int) -> ShiftTask | None:
         return await self._db.get(ShiftTask, id)
-
-
-    async def get_all_shift_tasks(self) -> Sequence[ShiftTask]:
-        query = select(ShiftTask)
-        res = await self._db.execute(query)
-        return res.scalars().all()
     
     async def get_product_by_id(self, id: str) -> Product | None:
         return await self._db.get(Product, id)

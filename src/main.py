@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from typing import Annotated
+from fastapi import FastAPI, Depends, HTTPException, Query, status
+from fastapi.encoders import jsonable_encoder
 from src.db.init_db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.deps import get_crud
 from src.crud import Crud
 from src.schemas import (ShiftTaskOut, ShiftTaskCreate, ProductCreate,
-                         ShiftTaskEdit, ShiftTaskOutWithProducts)
+                         ShiftTaskEdit, ShiftTaskOutWithProducts, ShiftTaskFilter)
 from src.exceptions import ShiftTaskNotFoundException
 app = FastAPI()
 
@@ -67,3 +69,14 @@ async def product_aggregate(shift_task_id: int, product_id: str,
         return product.id
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="unique code is attached to another batch")
+
+
+@app.get("/shift_tasks", response_model=list[ShiftTaskOut])
+async def get_shift_tasks(
+                          offset: int = 0, limit: int | None = None,
+                          crud: Crud = Depends(get_crud), filter_params: ShiftTaskFilter = Depends()
+                          ):
+    res = await crud.get_shift_tasks(params=filter_params, offset=offset, limit=limit)
+    return res
+
+    

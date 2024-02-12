@@ -56,8 +56,9 @@ class ShiftTaskOutWithProducts(BaseShiftTask):
     @validator('products', pre=True)
     def convert_products(cls, value: list[Product]):
         return [product.id for product in value]
+    
+class ShiftTaskOptional(BaseModel):
 
-class ShiftTaskEdit(BaseModel):
     closing_status: bool | None = None
     task: str | None = None
     work_center: str | None = None
@@ -71,6 +72,9 @@ class ShiftTaskEdit(BaseModel):
     start_time: datetime | None = None
     end_time: datetime | None = None
 
+
+class ShiftTaskEdit(ShiftTaskOptional):
+
     @model_validator(mode='after')
     def check_start_time_end_time(self) -> 'ShiftTaskEdit':
         if self.start_time and self.end_time:
@@ -80,6 +84,10 @@ class ShiftTaskEdit(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ShiftTaskFilter(ShiftTaskOptional):
+    id: int | None = None
+    closed_at: datetime | None = None
 
 class ProductCreate(BaseModel):
 
