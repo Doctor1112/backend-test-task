@@ -56,7 +56,7 @@ async def test_shift_tasks_create_if_shift_task_exists(ac: AsyncClient, crud: Cr
     assert res.status_code == 201
     res = await ac.post("/shift_tasks", json=[shift_task_2])
     assert res.status_code == 201
-    shift_tasks = await crud.get_all_shift_tasks()
+    shift_tasks = await crud.get_shift_tasks()
     assert len(shift_tasks) == 1
     shift_task_created = shift_tasks[0]
     assert shift_task_created.brigade == shift_task_2["Бригада"]

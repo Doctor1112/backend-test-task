@@ -138,8 +138,9 @@ async def shift_task_factory(async_session: AsyncSession):
                         start_time=datetime.strptime("2024-01-30T20:00:00+05:00", "%Y-%m-%dT%H:%M:%S%z"),
                         end_time=datetime.strptime("2024-01-31T08:00:00+05:00", '%Y-%m-%dT%H:%M:%S%z'))
             async_session.add(shift_task)
+            await async_session.commit()
+            await async_session.refresh(shift_task)
             shift_tasks.append(shift_task)
-        await async_session.commit()
         return shift_tasks
     
     return inner
