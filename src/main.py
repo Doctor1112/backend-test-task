@@ -5,6 +5,7 @@ from src.deps import get_crud
 from src.crud import Crud
 from src.schemas import (ShiftTaskOut, ShiftTaskCreate, ProductCreate,
                          ShiftTaskEdit, ShiftTaskOutWithProducts)
+from src.exceptions import ShiftTaskNotFoundException
 app = FastAPI()
 
 
@@ -33,10 +34,7 @@ async def create_products(products: list[ProductCreate],
 async def get_shift_task_with_products_ids(id: int, crud: Crud = Depends(get_crud)):
     shift = await crud.get_shift_task_with_products(id)
     if shift is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="shift task with this id does not exist"
-        )
+        raise ShiftTaskNotFoundException
     return shift
 
 @app.patch("/shift_tasks/{id}", response_model=ShiftTaskOut)
@@ -44,6 +42,28 @@ async def shift_task_edit(id: int, update_data: ShiftTaskEdit,
                           crud: Crud = Depends(get_crud)):
     shift_task = await crud.shift_task_edit_by_id(id=id, data=update_data)
     if shift_task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="shift task with this id does not exist")
+        raise ShiftTaskNotFoundException
     return shift_task
+
+
+@app.post("/products/aggregate/{shift_task_id}/{product_id}")
+async def product_aggregate(shift_task_id: int, product_id: str,
+                            crud: Crud = Depends(get_crud)):
+    shift_task = await crud.get_shift_task_by_id(shift_task_id)
+    if shift_task is None:
+        raise ShiftTaskNotFoundException
+    if shift_task.closing_status == True:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"shift task is closed")
+    product = await crud.get_product_by_id(product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"product with this id does not exist")
+    if product.batch_date == shift_task.batch_date and product.batch_number == shift_task.batch_number:
+        if product.is_aggregated:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"unique code already used at {product.aggregated_at}")
+        await crud.aggregate_product(product)
+        return product.id
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="unique code is attached to another batch")

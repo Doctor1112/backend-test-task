@@ -89,3 +89,8 @@ class Crud:
     async def get_products_count(self) -> int | None:
         query = await self._db.execute(func.count(Product.id))
         return query.scalar()
+    
+    async def aggregate_product(self, product: Product):
+        product.is_aggregated = True
+        product.aggregated_at = datetime.now()
+        await self._db.commit()
