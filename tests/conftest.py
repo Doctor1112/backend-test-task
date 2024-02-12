@@ -11,8 +11,8 @@ from src.db.init_db import Base, get_db
 from src.main import app
 from src.config import settings
 from src.crud import Crud
-from src.models import ShiftTask
-from src.schemas import ShiftTaskCreate, ShiftTaskOut
+from src.models import Product, ShiftTask
+from src.schemas import ProductCreate, ShiftTaskCreate, ShiftTaskOut
 import faker
 from datetime import datetime, date
 from tests.data import base_shift_task
@@ -77,7 +77,7 @@ async def product_factory(async_session: AsyncSession):
         products = []
         for i in range(n):
             product = {
-                    "УникальныйКодПродукта": fake.unique.text(),
+                    "УникальныйКодПродукта": str(fake.unique.random_int()),
                     "НомерПартии": fake.unique.random_int(),
                     "ДатаПартии": fake.unique.date(),
                     }
@@ -103,11 +103,19 @@ async def product_factory(async_session: AsyncSession):
     return inner
 
 @pytest.fixture()
-async def shift_task(async_session: AsyncSession) -> ShiftTaskOut:
-    shift_task = ShiftTask(**ShiftTaskCreate.model_validate(base_shift_task).model_dump())
-    async_session.add(shift_task)
+async def product(product_factory, async_session: AsyncSession) -> Product:
+    res = await product_factory()
+    res = ProductCreate(**res[0])
+    product = Product(**res.model_dump())
+    async_session.add(product)
     await async_session.commit()
-    return shift_task
+    return product
+
+
+@pytest.fixture()
+async def shift_task(shift_task_factory) -> ShiftTaskOut:
+    shift_task_list = await shift_task_factory()
+    return shift_task_list[0]
 
 
 @pytest.fixture()
@@ -118,17 +126,17 @@ async def shift_task_factory(async_session: AsyncSession):
         for i in range(n):
             shift_task = ShiftTask(
                         closing_status=False,
-                        task=fake.text(),
-                        work_center=fake.text(),
-                        shift=fake.text(),
-                        brigade=fake.text(),
+                        task=fake.text()[:10],
+                        work_center=fake.text()[:10],
+                        shift=fake.text()[:10],
+                        brigade=fake.text()[:10],
                         batch_number=fake.unique.random_int(),
                         batch_date=date.fromisoformat(fake.unique.date()),
-                        nomenclature=fake.text(),
-                        ekn_code=fake.text(),
-                        work_center_id=fake.text(),
-                        start_time=datetime(2000, 2, 3),
-                        end_time=datetime(2001, 2, 3))
+                        nomenclature=fake.text()[:10],
+                        ekn_code=fake.text()[:10],
+                        work_center_id=fake.text()[:10],
+                        start_time=datetime.strptime("2024-01-30T20:00:00+05:00", "%Y-%m-%dT%H:%M:%S%z"),
+                        end_time=datetime.strptime("2024-01-31T08:00:00+05:00", '%Y-%m-%dT%H:%M:%S%z'))
             async_session.add(shift_task)
             shift_tasks.append(shift_task)
         await async_session.commit()
