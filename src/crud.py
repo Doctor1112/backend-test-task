@@ -24,7 +24,17 @@ class Crud:
         shift_task = await self.get_shift_task_by_id(id)
         if shift_task is None:
             return None
+        
         dict_data = data.model_dump(exclude_none=True)
+        batch_number = data.batch_number or shift_task.batch_number
+        batch_date = data.batch_date or shift_task.batch_date
+        if batch_number != shift_task.batch_number or batch_date != shift_task.batch_date:
+            shift_task_ = await self.get_shift_task_by_batch_number_and_date(batch_number,
+                                                                         batch_date)
+            if shift_task_:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="shift task with that batch number and batch date already exists")
+            
         for (key, value) in dict_data.items():
             setattr(shift_task, key, value)
             if key == "closing_status":
@@ -32,7 +42,6 @@ class Crud:
                     shift_task.closed_at = datetime.now()
                 else:
                     shift_task.closed_at = None
-
         await self._db.commit()
         return shift_task
                 
