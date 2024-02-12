@@ -3,7 +3,8 @@ from src.db.init_db import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.deps import get_crud
 from src.crud import Crud
-from src.schemas import ShiftTaskOut, ShiftTaskCreate, ProductCreate
+from src.schemas import (ShiftTaskOut, ShiftTaskCreate, ProductCreate,
+                         ShiftTaskEdit, ShiftTaskOutWithProducts)
 app = FastAPI()
 
 
@@ -28,7 +29,7 @@ async def create_products(products: list[ProductCreate],
 
 
 
-@app.get("/shift_tasks/{id}", response_model=ShiftTaskOut)
+@app.get("/shift_tasks/{id}", response_model=ShiftTaskOutWithProducts)
 async def get_shift_task_with_products_ids(id: int, crud: Crud = Depends(get_crud)):
     shift = await crud.get_shift_task_with_products(id)
     if shift is None:
@@ -38,3 +39,11 @@ async def get_shift_task_with_products_ids(id: int, crud: Crud = Depends(get_cru
         )
     return shift
 
+@app.patch("/shift_tasks/{id}", response_model=ShiftTaskOut)
+async def shift_task_edit(id: int, update_data: ShiftTaskEdit,
+                          crud: Crud = Depends(get_crud)):
+    shift_task = await crud.shift_task_edit_by_id(id=id, data=update_data)
+    if shift_task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="shift task with this id does not exist")
+    return shift_task

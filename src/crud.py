@@ -6,7 +6,7 @@ from src.models import ShiftTask, Product
 from sqlalchemy.orm import selectinload
 from datetime import date, datetime
 from sqlalchemy.dialects.sqlite import insert as sqlite_upsert
-from src.schemas import ProductCreate
+from src.schemas import ProductCreate, ShiftTaskEdit
 
 
 class Crud:
@@ -20,6 +20,23 @@ class Crud:
         res = await self._db.execute(query)
         return res.scalar_one_or_none()
     
+    async def shift_task_edit_by_id(self, id: int, data: ShiftTaskEdit):
+        shift_task = await self.get_shift_task_by_id(id)
+        if shift_task is None:
+            return None
+        dict_data = data.model_dump(exclude_none=True)
+        for (key, value) in dict_data.items():
+            setattr(shift_task, key, value)
+            if key == "closing_status":
+                if value == True:
+                    shift_task.closed_at = datetime.now()
+                else:
+                    shift_task.closed_at = None
+
+        await self._db.commit()
+        return shift_task
+                
+    
     
     async def create_shift_tasks(self, shift_tasks: list[dict]):
             
@@ -29,6 +46,9 @@ class Crud:
             set_=dict(**stmt.excluded))
         await self._db.execute(stmt)
         await self._db.commit()
+
+    async def get_shift_task_by_id(self, id: int) -> ShiftTask | None:
+        return await self._db.get(ShiftTask, id)
 
 
     async def get_all_shift_tasks(self) -> Sequence[ShiftTask]:
