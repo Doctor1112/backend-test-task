@@ -40,7 +40,7 @@ jobs:
       - name: run tests
         run: pytest
       - name: install linters
-      - run: pip install flake8 mypy black
+        run: pip install flake8 mypy black
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
