@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres
+    restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+  postgres_test:
+    image: postgres
+    restart: always
+    volumes:
+      - ./data_test/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_TEST_NAME}
+      - POSTGRES_USER=${DB_TEST_USER}
+      - POSTGRES_PASSWORD=${DB_TEST_PASS}
+  web:
+    build: .
+    ports:
+      - 8000:8000
+    command: bash -c "./wait-for-it.sh postgres:5432 -t 100 && alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+  
+  tests:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      - postgres_test
+    volumes:
+      - .:/code
+    command: bash -c "./wait-for-it.sh postgres_test:5432 -t 100 && pytest"
